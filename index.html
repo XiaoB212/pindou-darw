@@ -1,0 +1,1453 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="拼豆像素画工具">
+  <title>拼豆像素画工具 - 极简创作空间</title>
+  <link rel="icon" type="image/png" sizes="16x16" href="./icon/pencil.png">
+  <link rel="stylesheet" href="./css/reset.css">
+  <link rel="stylesheet" href="./css/workspace.css">
+  <link rel="stylesheet" href="./css/toolbar.css">
+  <link rel="stylesheet" href="./css/status-bar.css">
+  <link rel="stylesheet" href="./css/panels.css">
+  <link rel="stylesheet" href="./css/forms.css">
+  <link rel="stylesheet" href="./css/buttons.css">
+  <link rel="stylesheet" href="./css/inline-controls.css">
+  <link rel="stylesheet" href="./css/color-display.css">
+  <link rel="stylesheet" href="./css/color-management.css">
+  <link rel="stylesheet" href="./css/floating-windows.css">
+  <link rel="stylesheet" href="./css/modal-windows.css">
+  <link rel="stylesheet" href="./css/update-log.css">
+  <link rel="stylesheet" href="./css/export-window.css">
+  <link rel="stylesheet" href="./css/resize-canvas.css">
+  <link rel="stylesheet" href="./css/reference-images.css">
+  <link rel="stylesheet" href="./css/local-storage.css">
+</head>
+
+<body>
+  <div id="displayModeToast" class="display-mode-toast" role="status" aria-live="polite" aria-hidden="true"></div>
+  <div id="manualHintToast" class="manual-hint-toast" role="status" aria-live="polite" aria-hidden="true"
+    data-text-default="← 如果有使用上的疑问请查看此处说明书。" data-text-mobile="说明书和额外使用在此处查看→">
+    ← 如果有使用上的疑问请查看此处说明书。
+  </div>
+  <div id="tabletUsageToast" class="tablet-usage-toast" role="status" aria-live="polite" aria-hidden="true">
+    平板模式建议开启全屏模式使用
+  </div>
+  <div id="autoSaveToast" class="autosave-toast" aria-hidden="true"></div>
+  <div id="autosaveProgress" class="autosave-progress" aria-hidden="true">
+    <div id="autosaveProgressFill" class="autosave-progress__fill"></div>
+  </div>
+  <!-- 左侧工具栏 -->
+  <aside class="toolbar toolbar-left" aria-label="功能工具栏">
+    <button class="toolbar-button is-active" type="button" data-role="panel" data-panel-target="canvas-settings"
+      aria-controls="panel-canvas-settings" aria-expanded="true" data-tooltip="画布设置">
+      <img src="svg/画布设置.svg" alt="">
+    </button>
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="base-settings"
+      aria-controls="panel-base-settings" aria-expanded="false" data-tooltip="底图设置">
+      <img src="svg/底图设置.svg" alt="">
+    </button> <button id="toggleReferenceBtn" class="toolbar-button" type="button" aria-label="参考窗口"
+      data-tooltip="参考图窗">
+      <img src="svg/参考图窗.svg" alt="">
+    </button>
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="export-tools"
+      aria-controls="panel-export-tools" aria-expanded="false" data-tooltip="导出文件">
+      <img src="svg/导出.svg" alt="">
+    </button>
+
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="import-tools"
+      aria-controls="panel-import-tools" aria-expanded="false" data-tooltip="导入文件">
+      <img src="svg/导入.svg" alt="">
+    </button>
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="display-settings"
+      aria-controls="panel-display-settings" aria-expanded="false" data-tooltip="显示设置">
+      <img src="svg/显示设置.svg" alt="">
+    </button>
+    <button id="focusModePanelBtn" class="toolbar-button" type="button" data-role="panel"
+      data-panel-target="focus-mode" aria-controls="panel-focus-mode" aria-expanded="false"
+      data-tooltip="全屏与简洁模式">
+      <img src="svg/放大.svg" alt="">
+    </button>
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="manual"
+      aria-controls="panel-manual" aria-expanded="false" data-tooltip="使用手册">
+      <img src="svg/使用手册.svg" alt="">
+    </button>
+    <button id="canvasInfoBtn" class="toolbar-button is-hidden" type="button" data-role="panel"
+      data-panel-target="canvas-info" aria-controls="panel-canvas-info" aria-expanded="false" data-tooltip="画布信息"
+      tabindex="-1">
+      <img src="svg/信息.svg" alt="">
+    </button>
+  </aside>
+
+  <!-- 右侧工具栏 -->
+  <aside class="toolbar toolbar-right" aria-label="绘制工具栏">
+    <button id="toolPencilBtn" class="toolbar-button" type="button" data-role="tool" data-tool="pencil"
+      aria-label="画笔工具" data-tooltip="画笔">
+      <img src="svg/画笔.svg" alt="">
+    </button>
+    <button id="toolBucketBtn" class="toolbar-button" type="button" data-role="tool" data-tool="bucket"
+      aria-label="油漆桶工具" data-tooltip="油漆桶">
+      <img src="svg/油漆桶.svg" alt="">
+    </button>
+    <button id="toolEyedropperBtn" class="toolbar-button" type="button" data-role="tool" data-tool="eyedropper"
+      aria-label="吸管工具" data-tooltip="吸管">
+      <img src="svg/吸管.svg" alt="">
+    </button>
+    <button id="toolSelectionBtn" class="toolbar-button" type="button" data-role="tool" data-tool="selection"
+      aria-label="框选工具" data-tooltip="框选">
+      <img src="svg/选区.svg" alt="">
+    </button>
+    <button id="paletteWindowToggleBtn" class="toolbar-button" type="button" aria-controls="paletteWindow"
+      aria-pressed="false" aria-label="调色盘" data-tooltip="调色盘">
+      <img src="svg/调色盘.svg" alt="">
+    </button>
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="image-operations"
+      aria-controls="panel-image-operations" aria-expanded="false" data-tooltip="图像操作">
+      <img src="svg/图像操作.svg" alt="">
+    </button>
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="palette-management"
+      aria-controls="panel-palette-management" aria-expanded="false" data-tooltip="色卡管理">
+      <img src="svg/色卡选择.svg" alt="">
+    </button>
+    <button class="toolbar-button" type="button" data-role="panel" data-panel-target="color-management"
+      aria-controls="panel-color-management" aria-expanded="false" data-tooltip="颜色管理">
+      <img src="svg/颜色管理.svg" alt="">
+    </button>
+  </aside>
+
+  <!-- 简洁模式底部工具栏 -->
+  <aside id="simpleToolbar" class="toolbar-bottom" aria-label="简洁工具栏" aria-hidden="true">
+    <button id="simpleToolPencilBtn" class="toolbar-button" type="button" data-role="tool" data-tool="pencil"
+      aria-label="画笔工具" data-tooltip="画笔">
+      <img src="svg/画笔.svg" alt="">
+    </button>
+    <button id="simpleToolBucketBtn" class="toolbar-button" type="button" data-role="tool" data-tool="bucket"
+      aria-label="油漆桶工具" data-tooltip="油漆桶">
+      <img src="svg/油漆桶.svg" alt="">
+    </button>
+    <button id="simpleToolEyedropperBtn" class="toolbar-button" type="button" data-role="tool" data-tool="eyedropper"
+      aria-label="吸色滴管" data-tooltip="滴管">
+      <img src="svg/吸管.svg" alt="">
+    </button>
+    <button id="simpleToolSelectionBtn" class="toolbar-button" type="button" data-role="tool" data-tool="selection"
+      aria-label="选区工具" data-tooltip="选区">
+      <img src="svg/选区.svg" alt="">
+    </button>
+    <button id="simplePaletteWindowBtn" class="toolbar-button" type="button" aria-label="色板窗口" data-tooltip="色板列表">
+      <img src="svg/调色盘.svg" alt="">
+    </button>
+    <button id="simpleModeExitBtn" class="toolbar-button" type="button" aria-label="退出简洁模式" data-tooltip="退出简洁模式">
+      <img src="svg/退出.svg" alt="">
+    </button>
+  </aside>
+  <div id="mobileToolbarGroup" class="mobile-toolbar-group" aria-hidden="true">
+    <div id="mobileMoveSlot" class="mobile-move-slot"></div>
+    <aside id="mobileToolbar" class="toolbar-bottom mobile-toolbar" aria-label="移动端工具栏" aria-hidden="true">
+      <button id="mobileToolPencilBtn" class="toolbar-button" type="button" aria-label="画笔" data-tooltip="画笔"
+        data-role="tool" data-tool="pencil">
+        <img src="svg/画笔.svg" alt="">
+      </button>
+      <button id="mobileToolBucketBtn" class="toolbar-button" type="button" aria-label="油漆桶" data-tooltip="油漆桶"
+        data-role="tool" data-tool="bucket">
+        <img src="svg/油漆桶.svg" alt="">
+      </button>
+      <button id="mobileToolEyedropperBtn" class="toolbar-button" type="button" aria-label="吸管" data-tooltip="吸管"
+        data-role="tool" data-tool="eyedropper">
+        <img src="svg/吸管.svg" alt="">
+      </button>
+      <button id="mobileToolSelectionBtn" class="toolbar-button" type="button" aria-label="选区" data-tooltip="选区"
+        data-role="tool" data-tool="selection">
+        <img src="svg/选区.svg" alt="">
+      </button>
+      <button id="mobilePaletteWindowBtn" class="toolbar-button" type="button" aria-label="调色盘" data-tooltip="调色盘">
+        <img src="svg/调色盘.svg" alt="">
+      </button>
+      <button id="mobileMenuBtn" class="toolbar-button" type="button" aria-label="菜单" data-tooltip="菜单">
+        <img src="svg/菜单.svg" alt="">
+      </button>
+    </aside>
+  </div>
+  <div id="mobileMenuOverlay" class="mobile-menu-overlay" aria-hidden="true">
+    <div id="mobileMenuPanel" class="mobile-menu-panel" role="dialog" aria-label="菜单">
+      <button id="mobileMenuManualBtn" class="mobile-menu-button" type="button">
+        <img src="svg/使用手册.svg" alt="">
+        <span>使用说明</span>
+      </button>
+      <button id="mobileMenuCanvasBtn" class="mobile-menu-button" type="button">
+        <img src="svg/画布设置.svg" alt="">
+        <span>新建画布</span>
+      </button>
+      <button id="mobileMenuInfoBtn" class="mobile-menu-button" type="button">
+        <img src="svg/信息.svg" alt="">
+        <span>画布信息</span>
+      </button>
+      <button id="mobileMenuBaseBtn" class="mobile-menu-button" type="button">
+        <img src="svg/底图设置.svg" alt="">
+        <span>底图校准</span>
+      </button>
+      <button id="mobileMenuReferenceBtn" class="mobile-menu-button" type="button">
+        <img src="svg/参考图窗.svg" alt="">
+        <span>参考窗口</span>
+      </button>
+      <button id="mobileMenuExportBtn" class="mobile-menu-button" type="button">
+        <img src="svg/导出.svg" alt="">
+        <span>导出/保存</span>
+      </button>
+      <button id="mobileMenuImportBtn" class="mobile-menu-button" type="button">
+        <img src="svg/导入.svg" alt="">
+        <span>导入/读取</span>
+      </button>
+      <button id="mobileMenuDisplayBtn" class="mobile-menu-button" type="button">
+        <img src="svg/显示设置.svg" alt="">
+        <span>显示设置</span>
+      </button>
+      <button id="mobileMenuFullscreenBtn" class="mobile-menu-button" type="button">
+        <img src="svg/放大.svg" alt="">
+        <span>全屏</span>
+      </button>
+      <button id="mobileMenuImageOpsBtn" class="mobile-menu-button" type="button">
+        <img src="svg/图像操作.svg" alt="">
+        <span>图像操作</span>
+      </button>
+      <button id="mobileMenuPaletteManageBtn" class="mobile-menu-button" type="button">
+        <img src="svg/色卡选择.svg" alt="">
+        <span>色卡管理</span>
+      </button>
+      <button id="mobileMenuColorManageBtn" class="mobile-menu-button" type="button">
+        <img src="svg/颜色管理.svg" alt="">
+        <span>颜色管理</span>
+      </button>
+    </div>
+  </div>
+  <aside id="tabletUndoRedo" class="toolbar-bottom tablet-undo-redo" aria-label="撤回与回退" aria-hidden="true">
+    <button id="tabletUndoBtn" class="toolbar-button" type="button" aria-label="撤回" data-tooltip="撤回">
+      <img src="svg/撤回.svg" alt="">
+    </button>
+    <button id="tabletMoveToggleBtn" class="toolbar-button" type="button" aria-label="移动模式" data-tooltip="移动模式">
+      <img src="svg/移动.svg" alt="">
+    </button>
+    <button id="tabletRedoBtn" class="toolbar-button" type="button" aria-label="回退" data-tooltip="回退">
+      <img src="svg/重做.svg" alt="">
+    </button>
+  </aside>
+  <button id="baseEditExitBtn" class="toolbar-button base-edit-exit-btn" type="button" aria-label="退出底图编辑"
+    data-tooltip="退出底图编辑" aria-hidden="true">
+    <img src="svg/无.svg" alt="">
+  </button>
+  <div id="baseEditScaleControl" class="base-edit-scale-control" aria-hidden="true">
+    <span id="baseEditScaleValue" class="base-edit-scale-value" aria-live="polite">100%</span>
+    <input id="baseEditScaleRange" type="range" min="0.01" max="2" step="0.01" value="1" aria-label="底图缩放微调">
+  </div>
+  <div id="toolPopouts" class="tool-popouts" aria-hidden="true">
+    <div id="eraserPopout" class="tool-popout" data-expansion="eraser" aria-label="橡皮展开栏">
+      <button id="eraserPrimaryBtn" class="toolbar-button popout-button" type="button" aria-label="当前绘制工具"></button>
+      <button id="eraserSwitchBtn" class="toolbar-button popout-button" type="button" aria-label="橡皮">
+        <img src="svg/橡皮.svg" alt="">
+      </button>
+    </div>
+    <div id="selectionPopout" class="tool-popout" data-expansion="selection" aria-label="选区模式">
+      <button id="selectionAddBtn" class="toolbar-button popout-button" type="button" aria-label="添加选区">
+        <img src="svg/选区.svg" alt="">
+      </button>
+      <button id="selectionDeleteBtn" class="toolbar-button popout-button" type="button" aria-label="删除选区">
+        <img src="svg/删除选区.svg" alt="">
+      </button>
+      <button id="selectionMoveBtn" class="toolbar-button popout-button" type="button" aria-label="移动选区">
+        <img src="svg/移动选区.svg" alt="">
+      </button>
+    </div>
+  </div>
+
+  <!-- 图层 -->
+  <main class="workspace" role="main">
+    <div id="canvasWrapper" class="canvas-wrapper">
+      <div id="canvasStage" class="canvas-stage">
+        <div id="canvasViewport" class="canvas-viewport">
+          <canvas id="baseCanvas"></canvas>
+          <canvas id="drawingCanvas"></canvas>
+          <canvas id="selectionMaskCanvas" aria-hidden="true"></canvas>
+          <canvas id="selectionContentCanvas" aria-hidden="true"></canvas>
+          <canvas id="gridCanvas" aria-hidden="true"></canvas>
+          <canvas id="selectionOutlineCanvas" aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 底部信息栏 -->
+  <footer class="status-bar">
+    <div class="status-item">
+      <span class="status-label">画布大小：</span>
+      <span class="status-value" id="statusSize">未创建</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">使用色卡：</span>
+      <span class="status-value" id="statusPalette">未加载</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">底图状态：</span>
+      <span class="status-value" id="statusBase">未导入</span>
+    </div>
+    <div class="status-item">
+      <span class="status-label">画布创建时间：</span>
+      <span class="status-value" id="statusCreated">尚未创建</span>
+    </div>
+    <div class="status-item status-item--color">
+      <span class="status-label">当前选中颜色：</span>
+      <div class="status-color">
+        <span class="status-color-preview" id="statusColorPreview" aria-hidden="true"></span>
+        <span class="status-color-code" id="statusColorCode">未选择</span>
+        <span class="status-color-hex" id="statusColorHex">--</span>
+        <span class="status-color-rgb" id="statusColorRgb">RGB: --</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 呼出栏 -->
+  <div class="panel-stack panel-stack-left" aria-live="polite">
+    <!-- 新建画布窗口 -->
+    <section class="tool-panel is-active" id="panel-canvas-settings" data-panel="canvas-settings">
+      <header class="tool-panel__header">
+        <h2>画布设置</h2>
+        <button class="panel-close-button" type="button" data-panel-close="canvas-settings"
+          aria-label="关闭画布设置">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">指定画布尺寸与像素比例，点击新建即可进入创作。</p>
+        <div class="form-field">
+          <label for="widthInput">宽度（像素）</label>
+          <input id="widthInput" type="number" min="1" max="1024" value="32">
+        </div>
+        <div class="form-field">
+          <label for="heightInput">高度（像素）</label>
+          <input id="heightInput" type="number" min="1" max="1024" value="32">
+        </div>
+        <div class="form-field">
+          <label for="resolutionInput">像素比例 1 : N</label>
+          <div class="resolution-control" role="group" aria-label="像素比例 1 比 N">
+            <span class="resolution-value resolution-value--fixed" aria-hidden="true">1</span>
+            <span class="resolution-divider" aria-hidden="true">:</span>
+            <div class="resolution-value resolution-value--input">
+              <input id="resolutionInput" class="resolution-input" type="number" min="4" max="80" step="1" value="10"
+                inputmode="numeric">
+              <span class="resolution-suffix">像素</span>
+            </div>
+          </div>
+        </div>
+        <div id="canvasSizeWarning" class="panel-notice" role="status" aria-live="polite"></div>
+        <div class="button-row">
+          <button id="createCanvasBtn" type="button" class="primary-button">新建画布</button>
+          <button id="resizeCanvasBtn" type="button" class="ghost-button">扩裁画布</button>
+        </div>
+        <button id="photoSketchBtn" type="button" class="ghost-button button-row__full">根据图片生成草图</button>
+
+      </div>
+    </section>
+
+
+    <!-- 底图设置窗口 -->
+    <section class="tool-panel" id="panel-base-settings" data-panel="base-settings">
+      <header class="tool-panel__header">
+        <h2>底图设置</h2>
+        <button class="panel-close-button" type="button" data-panel-close="base-settings" aria-label="关闭底图设置">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">导入底图并控制其模式与缩放，帮助描绘更精确。</p>
+        <div class="button-row">
+          <button id="importBaseBtn" type="button" class="primary-button">导入底图</button>
+          <button id="clearBaseBtn" type="button" class="ghost-button">移除底图</button>
+        </div>
+        <div class="button-row">
+          <button id="toggleBaseEditBtn" type="button" class="ghost-button" disabled>底图编辑</button>
+          <button id="recenterBaseBtn" type="button" class="ghost-button" disabled>底图居中</button>
+          <button id="snapBaseToCanvasBtn" type="button" class="ghost-button" disabled>贴合画布</button>
+        </div>
+        <div class="form-field">
+          <label for="baseLayerSelect">底图模式</label>
+          <select id="baseLayerSelect" disabled>
+            <option value="under">底图在画布下方</option>
+            <option value="over">底图在画布上方</option>
+            <option value="hidden">隐藏底图</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="baseScaleRange">底图缩放 <span id="baseScaleValue">100%</span></label>
+          <input id="baseScaleRange" type="range" min="0.01" max="2" step="0.01" value="1" disabled>
+        </div>
+        <div class="form-field">
+          <label class="sr-only" for="baseScaleInput">底图缩放数值</label>
+          <input id="baseScaleInput" type="number" min="0.01" max="2" step="0.01" value="1" aria-label="底图缩放" disabled>
+        </div>
+        <p class="panel-meta">当前底图：<span id="statusBase">未导入</span></p>
+        <input id="baseImageInput" type="file" accept="image/*" hidden>
+      </div>
+    </section>
+
+    <!-- 导入文件窗口 -->
+    <section class="tool-panel" id="panel-import-tools" data-panel="import-tools">
+      <header class="tool-panel__header">
+        <h2>导入文件或本地读取</h2>
+        <button class="panel-close-button" type="button" data-panel-close="import-tools" aria-label="关闭导入文件">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">从外部导入.pd文件或从本地读取数据</p>
+        <button id="importProjectBtn" type="button" class="primary-button">选择 .pd 文件</button>
+        <button id="openLocalLoadBtn" type="button" class="ghost-button button-row__full">读取本地存储</button>
+        <input id="projectFileInput" type="file" accept=".pd,application/json" hidden>
+      </div>
+    </section>
+
+    <!-- 导出文件窗口 -->
+    <section class="tool-panel" id="panel-export-tools" data-panel="export-tools">
+      <header class="tool-panel__header">
+        <h2>导出文件或本地保存</h2>
+        <button class="panel-close-button" type="button" data-panel-close="export-tools" aria-label="关闭导出文件">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">导出图片、工程文件或保存至本地</p>
+        <div class="button-row button-row--stacked">
+          <button id="openExportWindowBtn" type="button" class="primary-button button-row__full">导出图片</button>
+          <button id="openLocalSaveBtn" type="button" class="ghost-button button-row__full">保存在本地</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 显示设置窗口 -->
+    <section class="tool-panel" id="panel-display-settings" data-panel="display-settings">
+      <header class="tool-panel__header">
+        <h2>显示设置</h2>
+        <button class="panel-close-button" type="button" data-panel-close="display-settings"
+          aria-label="关闭显示设置">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">调整画布缩放、色号显示与背景透明度，定制工作视图。</p>
+        <label class="inline-control">
+          <input type="checkbox" id="autoSnapToggle">
+          <span>自动贴合底图颜色</span>
+        </label>
+        <label class="inline-control">
+          <input type="checkbox" id="showCodesToggle">
+          <span>显示色号</span>
+        </label>
+        <label class="inline-control">
+          <input type="checkbox" id="autosaveCountdownToggle" checked>
+          <span>自动保存倒计时显示</span>
+        </label>
+
+        <section class="display-options-group" aria-labelledby="displayModeGroupLabel">
+          <p id="displayModeGroupLabel" class="display-options__title">画布光效</p>
+          <div class="display-options__tabs display-options__tabs--grid-2x2" role="radiogroup" aria-label="画布光效模式">
+            <label class="display-tab">
+              <input type="radio" name="canvasDisplayMode" value="standard" id="displayModeStandard" checked>
+              <span>标准模式</span>
+            </label>
+            <label class="display-tab">
+              <input type="radio" name="canvasDisplayMode" value="night" id="displayModeNight">
+              <span>夜晚模式</span>
+            </label>
+            <label class="display-tab">
+              <input type="radio" name="canvasDisplayMode" value="temperature" id="displayModeTemperature">
+              <span>温变预览</span>
+            </label>
+            <label class="display-tab">
+              <input type="radio" name="canvasDisplayMode" value="light" id="displayModeLight">
+              <span>光变预览</span>
+            </label>
+            <label class="display-tab">
+              <input type="radio" name="canvasDisplayMode" value="special" id="displayModeSpecial">
+              <span>温变/光变双预览</span>
+            </label>
+          </div>
+          <p class="display-options__hint">夜晚模式会整体压暗画布，夜光色保持原色。温变/光变预览用于查看对应特殊色。</p>
+        </section>
+
+        <section class="display-options-group" aria-labelledby="pixelShapeGroupLabel">
+          <p id="pixelShapeGroupLabel" class="display-options__title">像素形状</p>
+          <div class="display-options__tabs display-options__tabs--pill" role="radiogroup" aria-label="像素形状">
+            <label class="display-tab">
+              <input type="radio" name="pixelShape" value="square" id="pixelShapeSquare" checked>
+              <span>实心方形</span>
+            </label>
+            <label class="display-tab">
+              <input type="radio" name="pixelShape" value="circle" id="pixelShapeCircle">
+              <span>空心圆</span>
+            </label>
+          </div>
+        </section>
+
+        <label class="inline-control inline-control--with-value zoom-control">
+          <span>缩放比例</span>
+          <div class="inline-control__range">
+            <input type="range" id="zoomRange" min="5" max="40" step="1" value="10">
+            <span class="inline-value" id="zoomRangeValue">100%</span>
+          </div>
+        </label>
+        <label class="inline-control inline-control--with-value">
+          <span>画布透明度</span>
+          <div class="inline-control__range">
+            <input type="range" id="canvasOpacityRange" min="0" max="100" step="1" value="90">
+            <span class="inline-value" id="canvasOpacityValue">90%</span>
+          </div>
+        </label>
+
+        <label class="inline-control inline-control--with-value">
+          <span>坐标轴透明度</span>
+          <div class="inline-control__range">
+            <input type="range" id="axisOpacityRange" min="0" max="100" step="5" value="100">
+            <span class="inline-value" id="axisOpacityValue">100%</span>
+          </div>
+        </label>
+        <div class="grid-settings axis-settings" aria-live="polite">
+          <p class="grid-settings__eyebrow">坐标轴粗线</p>
+          <p class="grid-settings__description">控制粗线间隔与起始方向，让坐标轴更加明显。</p>
+          <div class="grid-accordion axis-settings__accordion" data-grid-section="x">
+            <button class="grid-accordion__header" type="button" aria-expanded="false">
+              <span class="grid-settings__group-title">X 轴</span>
+              <span class="grid-accordion__chevron" aria-hidden="true"></span>
+            </button>
+            <div class="grid-accordion__content" data-grid-content="x" hidden>
+              <label class="inline-control">
+                <input type="checkbox" id="gridBoldXToggle">
+                <span>启用粗线</span>
+              </label>
+              <label class="inline-control inline-control--with-value">
+                <span>粗线间隔</span>
+                <input type="number" id="gridBoldXInterval" min="1" max="512" value="5">
+              </label>
+              <label class="inline-control inline-control--with-value">
+                <span>起始位置</span>
+                <select id="gridXStart">
+                  <option value="center">对齐画布中心（默认）</option>
+                  <option value="ltr">从左到右</option>
+                  <option value="rtl">从右到左</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="grid-accordion axis-settings__accordion" data-grid-section="y">
+            <button class="grid-accordion__header" type="button" aria-expanded="false">
+              <span class="grid-settings__group-title">Y 轴</span>
+              <span class="grid-accordion__chevron" aria-hidden="true"></span>
+            </button>
+            <div class="grid-accordion__content" data-grid-content="y" hidden>
+              <label class="inline-control">
+                <input type="checkbox" id="gridBoldYToggle">
+                <span>启用粗线</span>
+              </label>
+              <label class="inline-control inline-control--with-value">
+                <span>粗线间隔</span>
+                <input type="number" id="gridBoldYInterval" min="1" max="512" value="5">
+              </label>
+              <label class="inline-control inline-control--with-value">
+                <span>起始位置</span>
+                <select id="gridYStart">
+                  <option value="center">对齐画布中心（默认）</option>
+                  <option value="ttb">从上到下</option>
+                  <option value="btt">从下到上</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 使用手册与说明书中转栏 -->
+    <section class="tool-panel" id="panel-manual" data-panel="manual">
+      <header class="tool-panel__header">
+        <h2>使用手册</h2>
+        <button class="panel-close-button" type="button" data-panel-close="manual" aria-label="关闭使用手册">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">快速查看版本更新与操作指南，帮助你高效上手。</p>
+        <div class="button-row">
+          <button id="updateManualBtn" type="button" class="ghost-button">更新说明</button>
+          <a id="docsLink" class="primary-button" href="manual.html" target="_blank" rel="noopener">使用说明</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-panel" id="panel-focus-mode" data-panel="focus-mode">
+      <header class="tool-panel__header">
+        <h2>全屏与简洁模式</h2>
+        <button class="panel-close-button" type="button" data-panel-close="focus-mode" aria-label="关闭全屏与简洁模式">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">可快速切换至全屏并预览简洁模式按钮。</p>
+      </div>
+    </section>
+
+    <section class="tool-panel" id="panel-canvas-info" data-panel="canvas-info">
+      <header class="tool-panel__header">
+        <h2>画布信息</h2>
+        <button class="panel-close-button" type="button" data-panel-close="canvas-info" aria-label="关闭画布信息">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">查看当前画布与底图的基础信息。</p>
+        <div class="panel-meta">创建时间：<span id="canvasInfoCreated">--</span></div>
+        <div class="panel-meta">使用色卡：<span id="canvasInfoPalette">--</span></div>
+        <div class="panel-meta">画布大小：<span id="canvasInfoSize">--</span></div>
+        <div class="panel-meta">底图状态：<span id="canvasInfoBase">--</span></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 底图管理窗口 -->
+  <div class="panel-stack panel-stack-right" aria-live="polite">
+
+    <section class="tool-panel" id="panel-image-operations" data-panel="image-operations">
+      <header class="tool-panel__header">
+        <h2>图像操作</h2>
+        <button class="panel-close-button" type="button" data-panel-close="image-operations"
+          aria-label="关闭图像操作">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">对画布整体进行翻转或旋转，方便快速调整布局。</p>
+        <div class="button-grid image-operations-grid">
+          <button id="flipHorizontalBtn" type="button" class="tool-operation-button">
+            <img src="svg/水平翻转.svg" alt="" aria-hidden="true">
+            <span>水平翻转</span>
+          </button>
+          <button id="flipVerticalBtn" type="button" class="tool-operation-button">
+            <img src="svg/垂直翻转.svg" alt="" aria-hidden="true">
+            <span>垂直翻转</span>
+          </button>
+          <button id="rotateClockwiseBtn" type="button" class="tool-operation-button">
+            <img src="svg/顺时针旋转.svg" alt="" aria-hidden="true">
+            <span>顺时针旋转</span>
+          </button>
+          <button id="rotateCounterclockwiseBtn" type="button" class="tool-operation-button">
+            <img src="svg/逆时针旋转.svg" alt="" aria-hidden="true">
+            <span>逆时针旋转</span>
+          </button>
+        </div>
+        <p class="panel-description">选择对称绘制方向。</p>
+        <div class="button-grid image-operations-grid">
+          <button id="symmetryCenterBtn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="center" aria-pressed="false">
+            <img src="svg/中心对称.svg" alt="" aria-hidden="true">
+            <span>中心对称</span>
+          </button>
+          <button id="symmetryVerticalBtn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="vertical" aria-pressed="false">
+            <img src="svg/垂直对称.svg" alt="" aria-hidden="true">
+            <span>纵向对称</span>
+          </button>
+          <button id="symmetryHorizontalBtn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="horizontal" aria-pressed="false">
+            <img src="svg/水平对称.svg" alt="" aria-hidden="true">
+            <span>水平对称</span>
+          </button>
+          <button id="symmetryDiagonal45Btn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="diagonal-45" aria-pressed="false">
+            <img src="svg/水平对称.svg" alt="" aria-hidden="true" class="symmetry-icon symmetry-icon--diag-45">
+            <span>45° 对称</span>
+          </button>
+          <button id="symmetryDiagonal135Btn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="diagonal-135" aria-pressed="false">
+            <img src="svg/水平对称.svg" alt="" aria-hidden="true" class="symmetry-icon symmetry-icon--diag-135">
+            <span>135° 对称</span>
+          </button>
+          <button id="symmetryCrossBtn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="cross" aria-pressed="false">
+            <img src="svg/十字对称.svg" alt="" aria-hidden="true">
+            <span>纵向+水平</span>
+          </button>
+          <button id="symmetryDiagonalCrossBtn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="diagonal-cross" aria-pressed="false">
+            <img src="svg/斜十字对称.svg" alt="" aria-hidden="true">
+            <span>45°+135°</span>
+          </button>
+          <button id="symmetryOctagonBtn" type="button" class="tool-operation-button symmetry-button"
+            data-symmetry-mode="octagonal" aria-pressed="false">
+            <img src="svg/八向对称.svg" alt="" aria-hidden="true">
+            <span>八向对称</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="tool-panel" id="panel-palette-management" data-panel="palette-management">
+      <header class="tool-panel__header">
+        <h2>色卡选择</h2>
+        <button class="panel-close-button" type="button" data-panel-close="palette-management"
+          aria-label="关闭色卡选择">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">管理色卡库，可快速切换历史色卡或导入新的色卡文件。</p>
+        <div class="form-field">
+          <label for="paletteHistorySelect">已加载色卡</label>
+          <select id="paletteHistorySelect">
+            <option value="__none">请选择色卡</option>
+          </select>
+        </div>
+        <p class="panel-description">想要自制色卡？点击“制作色卡”按钮，使用可视化工具导出 JSON/CSV。</p>
+        <div class="button-row">
+          <button id="loadDefaultPaletteBtn" type="button" class="ghost-button">加载内置 DMC</button>
+          <button id="importPaletteBtn" type="button" class="primary-button">导入色卡 (JSON/CSV)</button>
+          <button id="deletePaletteBtn" type="button" class="ghost-button">删除色卡</button>
+          <button id="createPaletteBtn" type="button" class="ghost-button">制作色卡</button>
+        </div>
+        <input id="paletteFileInput" type="file" accept=".json,.csv,application/json,text/csv" hidden>
+      </div>
+    </section>
+
+    <section class="tool-panel" id="panel-color-management" data-panel="color-management">
+      <header class="tool-panel__header">
+        <h2>颜色管理</h2>
+        <button class="panel-close-button" type="button" data-panel-close="color-management"
+          aria-label="关闭颜色管理">×</button>
+      </header>
+      <div class="tool-panel__body">
+        <p class="panel-description">调整、替换或锁定色卡中的色号，提升配色效率。</p>
+        <div class="color-management-actions">
+          <article class="color-management-card">
+            <div class="color-management-card__text">
+              <h3>色号启用</h3>
+              <p>开启或禁用色卡里的色号，避免误用生僻颜色。</p>
+            </div>
+            <button id="colorManageBtn" type="button"
+              class="color-management__action-button color-management__action-button--primary">打开颜色管理</button>
+          </article>
+          <article class="color-management-card">
+            <div class="color-management-card__text">
+              <h3>颜色高亮</h3>
+              <p>在画布上快速定位色号，方便检查或导出。</p>
+            </div>
+            <button id="canvasHighlightBtn" type="button" class="color-management__action-button">管理高亮颜色</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 调色盘浮动窗口 -->
+  <div id="paletteWindow" class="floating-window palette-window" aria-hidden="true" data-shortcuts-ignore="true"
+    data-min-width="280" data-min-height="460">
+    <header id="paletteWindowHeader" class="floating-window__header palette-window__header">
+      <span class="floating-window__title">调色盘</span>
+      <div class="floating-window__actions">
+        <button id="paletteWindowCloseBtn" type="button" aria-label="关闭调色盘">×</button>
+      </div>
+    </header>
+    <div class="floating-window__body palette-window__body">
+      <p class="panel-description">查看当前色卡，快速筛选色号并替换画布中的颜色。</p>
+      <div class="palette-window__controls">
+        <div class="form-field palette-window__filter">
+          <label for="paletteFilter">筛选色号 / 关键词</label>
+          <input id="paletteFilter" type="search" placeholder="输入色号或关键词">
+        </div>
+        <div class="current-color-display palette-window__current" id="currentColorInfo">
+          <span class="current-color-swatch" id="currentColorSwatch" aria-hidden="true"></span>
+          <div class="current-color-meta">
+            <span class="current-color-code" id="currentColorCode">未选中</span>
+            <span class="current-color-rgb" id="currentColorRgb">RGB: --</span>
+            <span class="current-color-type" id="currentColorType">类型：--</span>
+          </div>
+        </div>
+      </div>
+      <div id="paletteContainer" class="palette-window__tabs">
+        <div class="palette-tabs" role="tablist">
+          <button type="button" class="palette-tab is-active" data-palette-tab="normal" aria-selected="true"
+            aria-controls="palettePanelNormal">
+            普通色 <span class="palette-tab__count" id="paletteNormalCount">0</span>
+          </button>
+          <button type="button" class="palette-tab" data-palette-tab="special" aria-selected="false"
+            aria-controls="palettePanelSpecial">
+            特殊色 <span class="palette-tab__count" id="paletteSpecialCount">0</span>
+          </button>
+        </div>
+        <div class="palette-tab-panels">
+          <section id="palettePanelNormal" class="palette-tab-panel is-active" data-palette-panel="normal"
+            role="tabpanel">
+            <div id="paletteNormalContainer" class="palette-grid" aria-live="polite"></div>
+          </section>
+          <section id="palettePanelSpecial" class="palette-tab-panel" data-palette-panel="special" role="tabpanel">
+            <div class="palette-subtabs" role="tablist">
+              <button type="button" class="palette-subtab is-active" data-special-filter="all"
+                aria-selected="true">全部</button>
+              <button type="button" class="palette-subtab" data-special-filter="transparent"
+                aria-selected="false">透明</button>
+              <button type="button" class="palette-subtab" data-special-filter="light" aria-selected="false">光变</button>
+              <button type="button" class="palette-subtab" data-special-filter="temperatrue"
+                aria-selected="false">温变</button>
+              <button type="button" class="palette-subtab" data-special-filter="glow" aria-selected="false">夜光</button>
+              <button type="button" class="palette-subtab" data-special-filter="pearlescent"
+                aria-selected="false">珠光</button>
+            </div>
+            <div id="paletteSpecialContainer" class="palette-grid" aria-live="polite"></div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div id="paletteWindowResizer" class="floating-window__resizer" aria-hidden="true"></div>
+  </div>
+
+  <!-- 参考图窗口 -->
+  <div id="referenceWindow" class="floating-window" aria-hidden="true">
+    <header id="referenceHeader" class="floating-window__header">
+      <span class="floating-window__title">参考图窗口</span>
+      <div class="floating-window__actions">
+        <button id="referenceAddBtn" type="button" aria-label="添加图片">+</button>
+        <button id="referenceMinimizeBtn" type="button" aria-label="最小化参考图窗口">–</button>
+        <button id="referenceCloseBtn" type="button" aria-label="关闭参考图窗口">×</button>
+      </div>
+    </header>
+    <div class="floating-window__body">
+      <div id="referenceList" class="reference-list"></div>
+    </div>
+    <div id="referenceResizer" class="floating-window__resizer" aria-hidden="true"></div>
+    <!-- 添加隐藏的文件输入元素 -->
+    <input id="referenceImageInput" type="file" accept="image/*" multiple hidden>
+  </div>
+
+  <!-- 更新手册内容 -->
+  <div id="updateWindow" class="modal-window" aria-hidden="true" tabindex="-1" data-shortcuts-ignore="true">
+    <div class="modal-window__dialog">
+      <header class="modal-window__header">
+        <h2 class="modal-window__title">更新说明</h2>
+        <label class="update-dismiss-toggle" for="updateDismissToggle">
+          <input id="updateDismissToggle" type="checkbox">
+          <span>之后不再显示</span>
+        </label>
+        <button id="updateCloseBtn" type="button" aria-label="关闭更新说明">×</button>
+      </header>
+      <div class="modal-window__body">
+        <div class="update-feed">
+          <!-- 零、重构公告 -->
+          <section class="update-entry">
+            <header class="update-entry__header">
+              <h4 class="update-entry__title">重构公告</h4>
+            </header>
+            <p class="update-hero__summary">
+              如果您能看到这则公告，还十分感谢您能使用本网页。<br />
+              该网页已经持续了至少三个月开发，目前也已经有至少两个月停止更新，从技术上来说，这个网页只是我的一个基础作品，尽管包含了许多功能，但依旧会在大多使用体验上非常的差劲，尤其是响应式的使用。<br />
+              在接下来的一段时间中会对网页进行彻底的重构，您可以通过我的小红书或github来查看相关的开发进度。<br />
+              十分感谢您的支持！
+            </p>
+          </section>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="paletteLoadingOverlay" class="palette-loading-overlay" aria-hidden="true">
+    <div class="palette-loading-dialog" role="status" aria-live="polite">
+      <span class="palette-loading-spinner" aria-hidden="true"></span>
+      <span>正在加载数据</span>
+    </div>
+  </div>
+
+  <!-- 初次使用说明 -->
+  <div id="introWindow" class="modal-window" aria-hidden="true" tabindex="-1" data-shortcuts-ignore="true">
+    <div class="modal-window__dialog">
+      <header class="modal-window__header">
+        <h2 class="modal-window__title">初次使用说明<strong style="color: red">(必看!!!!!)</strong></h2>
+        <label class="update-dismiss-toggle" for="introDismissToggle">
+          <input id="introDismissToggle" type="checkbox">
+          <span>之后不再显示</span>
+        </label>
+        <button id="introCloseBtn" type="button" aria-label="关闭初次使用说明">×</button>
+      </header>
+      <div class="modal-window__body">
+        <div class="update-feed intro-feed">
+          <section class="update-entry">
+            <header class="update-entry__header">
+              <h4 class="update-entry__title" style="color: red">初次使用必看</h4>
+              <span class="update-entry__date">提醒</span>
+            </header>
+            <p class="update-entry__summary">如果您第一次使用请务必认真仔细阅读本窗口的内容，以免出现使用上的问题！</p>
+            <p class="update-entry__summary">该窗口可向下滑动查看。</p>
+          </section>
+          <section class="update-entry">
+            <header class="update-entry__header">
+              <h4 class="update-entry__title">这是什么网页</h4>
+              <span class="update-entry__date">解答</span>
+            </header>
+            <p class="update-entry__summary">该网页用于拼豆手工草图绘制，不支持专业的像素图绘制。</p>
+          </section>
+          <section class="update-entry">
+            <header class="update-entry__header">
+              <h4 class="update-entry__title">平台切换</h4>
+              <span class="update-entry__date">帮助</span>
+            </header>
+            <p class="update-entry__summary">网页支持<strong>电脑设备和平板设备</strong>使用，暂不支持<strong>手机设备</strong>使用。</p>
+            <ul class="update-entry__list">
+              <li>
+                <p class="update-entry__summary">平板使用的依旧是电脑怎么办？</p>
+                <p class="update-entry__summary">支持手动切换 <strong>左侧工具栏 -> 全屏和简洁模式开关(倒数第二个选项) -> 改为平板端操作与显示</strong></p>
+                <p class="update-entry__summary">特征：常态模式下有 <strong>[左右下]</strong> 三个工具栏，且右侧基础工具有橡皮模式选择</p>
+              </li>
+              <li>
+                <p class="update-entry__summary">电脑使用的依旧是平板怎么办？</p>
+                <p class="update-entry__summary">支持手动切换 <strong>左侧工具栏 -> 全屏和简洁模式开关(倒数第二个选项) -> 改为电脑端操作与显示</strong></p>
+                <p class="update-entry__summary">特征：常态模式下有 <strong>[左右]</strong> 两个工具栏，且右侧基础工具没有橡皮模式选择</p>
+              </li>
+            </ul>
+          </section>
+          <section class="update-entry">
+            <header class="update-entry__header">
+              <h4 class="update-entry__title">如何使用网页</h4>
+              <span class="update-entry__date">使用建议</span>
+            </header>
+            <p class="update-entry__summary">该网页支持非常多的功能，包含但不限于：</p>
+            <ul class="update-entry__list">
+              <li>以图生草图</li>
+              <li>基础绘制</li>
+              <li>工程文件导入和导出</li>
+              <li>本地保存</li>
+              <li>特殊色号绘制</li>
+              <li>图片自定义导出</li>
+              <li>更多功能……</li>
+            </ul>
+            <p>如果需要了解具体用途，请查看网站提供的说明书，有任何使用上的问题皆可在这里寻找答案。</p>
+            <a href="./manual.html" target="_blank" rel="noopener noreferrer" class="updata_a">电脑端使用说明书</a>
+            <a href="./manual-tablet.html" target="_blank" rel="noopener noreferrer" class="updata_a">平板端使用说明书</a>
+          </section>
+          <section class="update-entry">
+            <header class="update-entry__header">
+              <h4 class="update-entry__title">反馈和询问</h4>
+              <span class="update-entry__date">帮助</span>
+            </header>
+            <p class="update-entry__summary">如果在使用过程中遇到无法解决的问题，可通过以下方式反馈和询问：</p>
+            <ul class="update-entry__list">
+              <li><a href="https://space.bilibili.com/609170202" target="_blank" rel="noopener noreferrer"
+                  class="updata_a">
+                  B站 · 闷香红烧鱼
+                </a></li>
+              <li><a href="https://www.xiaohongshu.com/user/profile/65f420e30000000005008498" target="_blank"
+                  rel="noopener noreferrer" class="updata_a">
+                  小红书 · 闷香红烧鱼
+                </a></li>
+              <li><a href="https://github.com/MXBraisedFish/pindou-draw" target="_blank" rel="noopener noreferrer"
+                  class="updata_a">
+                  Github · MXBraisedFish
+                </a></li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 导出窗口 -->
+  <div id="exportWindow" class="modal-window modal-window--wide" aria-hidden="true" tabindex="-1"
+    data-shortcuts-ignore="true">
+    <div class="modal-window__dialog export-window__dialog">
+      <div class="modal-window__body export-window__body">
+        <div class="export-tablet-tabs" role="tablist" aria-label="导出窗口视图切换">
+          <button id="exportTabPreview" class="ghost-button export-tab-button" type="button" role="tab"
+            aria-selected="true" data-export-view="preview">导出预览</button>
+          <button id="exportTabSettings" class="ghost-button export-tab-button" type="button" role="tab"
+            aria-selected="false" data-export-view="settings">导出设置</button>
+          <button id="exportTabHighlight" class="ghost-button export-tab-button" type="button" role="tab"
+            aria-selected="false" data-export-view="highlight">高亮导出</button>
+        </div>
+        <div class="export-layout">
+          <!-- 预览部分 -->
+          <div class="export-preview-section">
+            <h3 class="section-title">预览：<span id="exportPreviewFilenameTitle"
+                class="export-preview-filename">pixel-art</span></h3>
+            <div class="preview-container">
+              <div class="preview-stage">
+                <canvas id="exportPreviewCanvas"></canvas>
+              </div>
+              <div class="preview-controls">
+                <button id="resetPreviewView" type="button" class="ghost-button">重置视图</button>
+                <span class="preview-scale">缩放: <span id="previewScaleValue">100%</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 设置部分 -->
+          <div class="export-settings-section">
+            <h3 class="section-title">导出设置</h3>
+            <div class="settings-group">
+              <div class="form-field form-field--wide">
+                <label for="exportFilename">文件名</label>
+                <input id="exportFilename" type="text" placeholder="输入文件名">
+                <div class="filename-preview">
+                  最终文件名：
+                  <span class="filename-base">pixel-art</span>
+                  <span class="filename-suffix">-0x0.png</span>
+                </div>
+              </div>
+
+              <div class="form-field">
+                <label>导出格式</label>
+                <div class="radio-group radio-group--grid">
+                  <label class="radio-option">
+                    <input type="radio" name="exportFormat" value="image/png" checked>
+                    <span class="radio-label">PNG 图像</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="exportFormat" value="image/jpeg">
+                    <span class="radio-label">JPG 图像</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="exportFormat" value="image/svg+xml">
+                    <span class="radio-label">SVG 文件</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="exportFormat" value="application/pdf">
+                    <span class="radio-label">PDF 文档</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="exportFormat" value="application/pd">
+                    <span class="radio-label">.pd 工程文件</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-field background-settings-field">
+                <label>背景设置</label>
+                <div class="radio-group">
+                  <label class="radio-option">
+                    <input type="radio" name="backgroundType" value="solid" checked>
+                    <span class="radio-label">纯色背景</span>
+                  </label>
+                  <label class="radio-option">
+                    <input type="radio" name="backgroundType" value="transparent">
+                    <span class="radio-label">透明背景</span>
+                  </label>
+                </div>
+                <div class="color-picker-container">
+                  <label for="exportBackgroundColor">背景颜色</label>
+                  <div class="color-input-wrapper">
+                    <input id="exportBackgroundColor" type="color" value="#ffffff">
+                    <span class="color-value">#FFFFFF</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-field include-settings-field">
+                <label>信息内容</label>
+                <div class="checkbox-group">
+                  <label class="checkbox-option">
+                    <input type="checkbox" name="includeCodes">
+                    <span class="checkbox-label">包含色号</span>
+                  </label>
+
+                  <label class="checkbox-option">
+                    <input type="checkbox" name="includeAxes">
+                    <span class="checkbox-label">包含坐标轴</span>
+                  </label>
+
+                  <label class="checkbox-option">
+                    <input type="checkbox" name="includeLightColors" checked>
+                    <span class="checkbox-label">显示光变色</span>
+                  </label>
+
+                  <label class="checkbox-option">
+                    <input type="checkbox" name="includeTemperatureColors" checked>
+                    <span class="checkbox-label">显示温变色</span>
+                  </label>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 高亮部分 -->
+          <div class="export-highlight-section">
+            <h3 class="section-title">高亮颜色</h3>
+            <div class="highlight-controls">
+              <div class="form-field">
+                <label for="highlightColorFilter">搜索颜色</label>
+                <div class="search-input-wrapper">
+                  <input id="highlightColorFilter" type="search" placeholder="输入色号或颜色名称">
+                </div>
+              </div>
+
+              <div class="highlight-buttons">
+                <button id="selectAllHighlightColors" type="button" class="ghost-button">全选</button>
+                <button id="deselectAllHighlightColors" type="button" class="ghost-button">取消全选</button>
+              </div>
+            </div>
+
+            <div id="highlightColorList" class="highlight-list">
+              <div class="highlight-list-header">
+                <span>颜色</span>
+                <span>色号</span>
+                <span>数量</span>
+                <span>是否选上</span>
+              </div>
+              <div class="highlight-list-content export-highlight-list-content">
+                <!-- 颜色列表将通过JS动态生成 -->
+              </div>
+            </div>
+
+            <div class="highlight-summary">
+              <span>已选 <strong id="highlightSelectedCount">0</strong> 个色号</span>
+              <span>共 <strong id="highlightTotalCount">0</strong> 个色号</span>
+            </div>
+
+            <div class="highlight-actions">
+              <p class="highlight-note">选中颜色后请使用下方“开始导出”按钮生成单个高亮图；需要批量下载可使用“导出全部高亮颜色”。</p>
+              <button id="exportAllHighlightColors" type="button"
+                class="ghost-button export-colors-btn">导出全部高亮颜色</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <footer class="modal-window__footer export-modal-window__footer">
+        <button id="exportCancelBtn" type="button" class="ghost-button">取消</button>
+        <button id="exportConfirmBtn" type="button" class="primary-button">确认导出</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 颜色管理窗口 -->
+  <div id="colorManageWindow" class="modal-window modal-window--wide" aria-hidden="true" tabindex="-1"
+    data-shortcuts-ignore="true">
+    <div class="modal-window__dialog">
+      <header class="modal-window__header">
+        <h2 class="modal-window__title">颜色管理</h2>
+        <button id="colorManageCloseBtn" type="button" aria-label="关闭颜色管理">×</button>
+      </header>
+      <div class="modal-window__body color-manage-window">
+        <div class="color-manage-layout">
+          <div class="color-manage-toolbar">
+            <div class="form-field color-manage-search">
+              <label for="colorManageSearch">搜索色号 / RGB</label>
+              <input id="colorManageSearch" type="search" placeholder="输入色号、名称或 RGB">
+            </div>
+            <div class="color-manage-quick-actions">
+              <button id="selectAllColorsBtn" type="button" class="ghost-button">全选颜色</button>
+              <button id="deselectAllColorsBtn" type="button" class="ghost-button">取消全选</button>
+            </div>
+          </div>
+          <div class="color-manage-status" role="status" aria-live="polite">
+            <div class="color-manage-counter">
+              <span>已启用</span>
+              <strong id="enabledColorCount">0/0</strong>
+            </div>
+            <div id="colorManageMessage" class="color-manage-message"></div>
+          </div>
+          <div class="color-manage-board">
+            <div id="colorManageList" class="color-manage-list" role="listbox" aria-multiselectable="true"></div>
+          </div>
+        </div>
+      </div>
+      <footer class="modal-window__footer">
+        <button id="colorManageCancelBtn" type="button" class="ghost-button">取消</button>
+        <button id="colorManageConfirmBtn" type="button" class="primary-button">确认</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 画布高亮与颜色替换 -->
+  <div id="canvasHighlightWindow" class="modal-window modal-window--wide" aria-hidden="true" tabindex="-1"
+    data-shortcuts-ignore="true">
+    <div class="modal-window__dialog">
+      <header class="modal-window__header">
+        <h2 class="modal-window__title">颜色高亮</h2>
+        <button id="canvasHighlightCloseBtn" type="button" aria-label="关闭颜色高亮">×</button>
+      </header>
+      <div class="modal-window__body highlight-window">
+        <div class="highlight-window__toolbar">
+          <div class="highlight-window__actions">
+            <button id="canvasHighlightSelectAll" type="button" class="ghost-button">全选颜色</button>
+            <button id="canvasHighlightDeselectAll" type="button" class="ghost-button">取消全选</button>
+            <button id="canvasHighlightReplaceBtn" type="button" class="ghost-button">替换选中颜色</button>
+          </div>
+          <div class="highlight-window__search form-field">
+            <label for="canvasHighlightFilter">搜索颜色</label>
+            <input id="canvasHighlightFilter" type="search" placeholder="按色号或关键字筛选">
+          </div>
+        </div>
+        <div class="highlight-window__content">
+          <div class="highlight-window__grid">
+            <div id="highlightOverlayList" class="highlight-list">
+              <div class="highlight-list-header">
+                <span>颜色</span>
+                <span>色号</span>
+                <span>像素</span>
+              </div>
+              <div class="highlight-list-content"></div>
+            </div>
+            <div id="canvasHighlightReplacementPanel" class="highlight-window__replacement-panel" aria-hidden="true">
+              <div class="highlight-window__replacement-header">
+                <div>
+                  <h3 id="canvasHighlightReplacementTitle">选择替换色</h3>
+                  <p id="canvasHighlightReplacementHint" class="highlight-window__replacement-hint">此处挑选替换为的颜色。</p>
+                </div>
+                <button id="canvasHighlightReplacementCloseBtn" type="button" class="ghost-button">取消</button>
+              </div>
+              <div class="form-field highlight-window__replacement-search">
+                <label for="canvasHighlightReplacementFilter">搜索替换色</label>
+                <input id="canvasHighlightReplacementFilter" type="search" placeholder="输入色号或关键字">
+              </div>
+              <div class="highlight-window__replacement-meta">
+                <span id="canvasHighlightReplacementSourceCount">已选 0 个高亮颜色</span>
+              </div>
+              <div id="canvasHighlightReplacementList" class="highlight-window__replacement-list" role="listbox"
+                aria-multiselectable="true">
+              </div>
+              <div class="highlight-window__replacement-actions">
+                <button id="canvasHighlightReplacementConfirmBtn" type="button" class="primary-button">开始替换</button>
+              </div>
+            </div>
+          </div>
+          <p class="highlight-window__hint">单击切换高亮状态，可结合搜索与批量操作快速筛选。</p>
+        </div>
+
+        <div id="canvasHighlightMessage" class="highlight-message" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 本地保存 / 读取本地存储 -->
+  <div id="localStorageWindow" class="modal-window" aria-hidden="true" tabindex="-1" data-shortcuts-ignore="true">
+    <div class="modal-window__dialog local-storage-window__dialog">
+      <header class="modal-window__header">
+        <h2 id="localStorageWindowTitle" class="modal-window__title">本地存储</h2>
+        <button id="localStorageCloseBtn" type="button" aria-label="关闭本地存储">×</button>
+      </header>
+      <div class="modal-window__body local-storage-window__body">
+        <p id="localStorageWindowHint" class="local-storage-window__hint"></p>
+        <div id="localStorageSlots" class="local-storage-slots" role="list"></div>
+      </div>
+      <footer class="modal-window__footer">
+        <button id="localStorageCancelBtn" type="button" class="ghost-button">关闭</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 切换色卡提醒 -->
+  <div id="paletteSwitchOverlay" class="overlay" aria-hidden="true" data-shortcuts-ignore="true">
+    <div class="overlay__dialog overlay__dialog--compact">
+      <header class="overlay__header">
+        <h2>色卡切换提示</h2>
+        <button id="paletteSwitchCloseBtn" type="button" aria-label="关闭色卡切换提示">×</button>
+      </header>
+      <div class="overlay__body">
+        <p id="paletteSwitchName" class="panel-description"></p>
+        <div id="paletteSwitchWarning" class="overlay-warning" role="alert"></div>
+        <div id="paletteSwitchSummary" class="panel-help"></div>
+      </div>
+      <footer class="overlay__footer">
+        <button id="paletteSwitchCancelBtn" type="button" class="ghost-button">取消</button>
+        <button id="paletteSwitchConvertBtn" type="button" class="primary-button">转换色卡</button>
+        <button id="paletteSwitchResetBtn" type="button" class="ghost-button">保持当前</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 扩裁画布窗口 -->
+  <div id="resizeCanvasOverlay" class="overlay" aria-hidden="true" data-shortcuts-ignore="true">
+    <div class="overlay__dialog resize-overlay-dialog">
+      <header class="overlay__header">
+        <h2>扩裁画布</h2>
+        <button id="resizeCloseBtn" type="button" aria-label="关闭扩裁画布窗口">×</button>
+      </header>
+      <div class="overlay__body resize-overlay-body">
+        <div id="resizeMessage" class="panel-notice"></div>
+        <div class="resize-mode-toggle" role="group" aria-label="调整模式">
+          <button id="resizeModeExpandBtn" type="button" class="resize-mode-btn">扩图</button>
+          <button id="resizeModeCropBtn" type="button" class="resize-mode-btn">裁图</button>
+        </div>
+        <div class="resize-stage">
+          <div class="resize-edge-card resize-edge-card--top">
+            <button class="resize-edit-btn" type="button" data-side="top">
+              <img src="svg/向上扩展或向下删除.svg" alt="向上扩展或向下删除">
+              <span>编辑</span>
+            </button>
+            <div class="resize-edit-value" data-value-for="top">0 格</div>
+          </div>
+          <div class="resize-edge-card resize-edge-card--left">
+            <button class="resize-edit-btn" type="button" data-side="left">
+              <img src="svg/向左扩展或向右删除.svg" alt="向左扩展或向右删除">
+              <span>编辑</span>
+            </button>
+            <div class="resize-edit-value" data-value-for="left">0 格</div>
+          </div>
+          <div class="resize-preview-block">
+            <div class="resize-preview">
+              <div id="resizePreviewWrapper">
+                <div id="resizePreviewStage">
+                  <canvas id="resizePreviewDrawingCanvas"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="resize-edge-card resize-edge-card--right">
+            <button class="resize-edit-btn" type="button" data-side="right">
+              <img src="svg/向右扩展或向左删除.svg" alt="向右扩展或向左删除">
+              <span>编辑</span>
+            </button>
+            <div class="resize-edit-value" data-value-for="right">0 格</div>
+          </div>
+          <div class="resize-edge-card resize-edge-card--bottom">
+            <button class="resize-edit-btn" type="button" data-side="bottom">
+              <img src="svg/向下扩展或向上删除.svg" alt="向下扩展或向上删除">
+              <span>编辑</span>
+            </button>
+            <div class="resize-edit-value" data-value-for="bottom">0 格</div>
+          </div>
+        </div>
+        <div class="resize-info">
+          <div class="resize-info-item">
+            <span class="resize-info-label">编辑前</span>
+            <span id="resizeCurrentSize" class="resize-info-value">--</span>
+          </div>
+          <div class="resize-actions">
+            <button id="resizeConfirmBtn" type="button" class="primary-button">应用调整</button>
+            <button id="resizeCancelBtn" type="button" class="ghost-button">取消</button>
+          </div>
+          <div class="resize-info-item">
+            <span class="resize-info-label">编辑后</span>
+            <span id="resizeResultSize" class="resize-info-value">--</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="photoSketchOverlay" class="overlay madol" aria-hidden="true" data-shortcuts-ignore="true">
+    <div class="overlay__dialog photo-sketch-dialog madol" role="dialog" aria-modal="true"
+      aria-labelledby="photoSketchTitle">
+      <header class="overlay__header madol">
+        <div class="photo-sketch-header-text madol">
+          <h3 id="photoSketchTitle" class="madol">根据图片生成草图</h3>
+        </div>
+        <button id="photoSketchCloseBtn" type="button" class="madol" aria-label="关闭">×</button>
+      </header>
+      <div class="overlay__body photo-sketch-body madol">
+        <div class="photo-sketch-tablet-tabs madol" role="tablist" aria-label="草图功能切换">
+          <button id="photoSketchTabParams" class="ghost-button madol" type="button" role="tab" aria-selected="true">
+            参数设置
+          </button>
+          <button id="photoSketchTabPreview" class="ghost-button madol" type="button" role="tab" aria-selected="false">
+            参考预览
+          </button>
+        </div>
+        <div class="photo-sketch-grid madol">
+          <section class="photo-sketch-panel madol">
+            <div class="form-field madol">
+              <label class="madol">选择图片</label>
+              <div class="photo-sketch-file madol">
+                <button id="photoSketchImageBtn" type="button" class="ghost-button madol">选择图片</button>
+                <span id="photoSketchFileName" class="photo-sketch-file__name madol">尚未选择文件</span>
+                <input id="photoSketchFileInput" type="file" accept="image/*" hidden>
+              </div>
+            </div>
+            <div class="form-field madol">
+              <label for="photoSketchScaleRange" class="madol">转换比率</label>
+              <div class="photo-sketch-range madol">
+                <input id="photoSketchScaleRange" type="range" min="1" max="100" step="1" value="100" class="madol">
+                <span id="photoSketchScaleValue" class="madol">100%</span>
+              </div>
+              <p class="form-hint madol">支持 1%~100% 缩放，系统会在 8~1024 格之间自动取整</p>
+            </div>
+            <div class="form-field madol">
+              <label for="photoSketchAlignSelect" class="madol">对齐像素</label>
+              <select id="photoSketchAlignSelect" class="madol">
+                <option value="fit" class="madol">保持比例 · 完整显示</option>
+                <option value="cover" class="madol">保持比例 · 裁剪填满</option>
+                <option value="stretch" class="madol">拉伸至画布</option>
+              </select>
+            </div>
+            <div class="form-field madol">
+              <label class="madol">基准线位置</label>
+              <div class="photo-sketch-align-inputs madol">
+                <label class="madol">水平
+                  <div class="photo-sketch-range-input madol">
+                    <input id="photoSketchOffsetX" type="range" min="0" max="0" step="0.1" value="0" class="madol">
+                    <input id="photoSketchOffsetXInput" type="number" min="0" max="0" step="0.1" value="0"
+                      aria-label="水平基准线精确值" class="madol">
+                  </div>
+                </label>
+                <label class="madol">垂直
+                  <div class="photo-sketch-range-input madol">
+                    <input id="photoSketchOffsetY" type="range" min="0" max="0" step="0.1" value="0" class="madol">
+                    <input id="photoSketchOffsetYInput" type="number" min="0" max="0" step="0.1" value="0"
+                      aria-label="垂直基准线精确值" class="madol">
+                  </div>
+                </label>
+              </div>
+              <p class="form-hint madol">两条基准线决定裁剪起点，可精确对准某个像素。</p>
+            </div>
+            <div class="form-field madol">
+              <label class="madol">裁剪尺寸 (像素)</label>
+              <div class="photo-sketch-crop-inputs madol">
+                <input id="photoSketchCropWidth" type="number" min="1" value="0" class="madol">
+                <input id="photoSketchCropHeight" type="number" min="1" value="0" class="madol">
+              </div>
+              <label class="photo-sketch-crop-lock madol">
+                <input id="photoSketchCropLock" type="checkbox" class="madol">
+                <span class="madol">锁定比例</span>
+              </label>
+              <button type="button" id="photoSketchAspectReset" class="photo-sketch-aspect-reset madol">恢复原图比例</button>
+              <p class="form-hint madol">示例：若要保持 2×2 的方形，请填入 2 与 2。</p>
+            </div>
+            <div class="form-field madol">
+              <label for="photoSketchPaletteSelect" class="madol">选择色卡</label>
+              <select id="photoSketchPaletteSelect" class="madol"></select>
+              <p class="form-hint madol">创建时仅使用普通颜色，特殊色会自动忽略。</p>
+            </div>
+            <div class="form-field madol">
+              <label for="photoSketchPixelRatio" class="madol">像素比例 (1 : N)</label>
+              <input id="photoSketchPixelRatio" type="number" min="4" max="80" step="1" value="10" class="madol">
+            </div>
+            <div class="form-field madol">
+              <label class="madol">抖动仿色设置</label>
+              <div class="photo-sketch-dither-options madol">
+                <label class="madol">
+                  <input type="radio" name="photoSketchDither" value="none" checked class="madol">
+                  <span class="madol">无抖动</span>
+                </label>
+                <label class="madol">
+                  <input type="radio" name="photoSketchDither" value="floyd-steinberg" class="madol">
+                  <span class="madol">Floyd–Steinberg (FS)</span>
+                </label>
+                <label class="madol">
+                  <input type="radio" name="photoSketchDither" value="blue-noise" class="madol">
+                  <span class="madol">蓝噪声抖动 (Blue Noise)</span>
+                </label>
+              </div>
+            </div>
+            <div class="photo-sketch-summary madol" id="photoSketchSummary" class="madol">目标尺寸：-- × --</div>
+          </section>
+          <section class="photo-sketch-panel photo-sketch-panel--preview madol">
+            <header class="madol">参考预览</header>
+            <div class="photo-sketch-preview-tabs madol" role="tablist" aria-label="预览切换">
+              <button id="photoSketchPreviewTabOriginal" class="ghost-button madol" type="button" role="tab"
+                aria-selected="false">原图</button>
+              <button id="photoSketchPreviewTabPixel" class="ghost-button madol" type="button" role="tab"
+                aria-selected="true">像素图</button>
+            </div>
+            <div class="photo-sketch-preview-stack madol">
+              <div class="photo-sketch-preview-pane madol" data-pane="original">
+                <canvas id="photoSketchOriginalPreview" width="320" height="320" aria-label="原图预览"
+                  class="madol"></canvas>
+              </div>
+              <div class="photo-sketch-preview-pane madol" data-pane="pixel">
+                <canvas id="photoSketchPixelPreview" width="320" height="320" aria-label="像素图预览" class="madol"></canvas>
+                <p id="photoSketchPreviewInfo" class="photo-sketch-preview__info madol">尚未选择图片</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <footer class="overlay__footer photo-sketch-footer madol">
+        <div id="photoSketchStatus" class="photo-sketch-status madol" role="status" aria-live="polite"></div>
+        <div class="photo-sketch-actions madol">
+          <button id="photoSketchCancelBtn" type="button" class="ghost-button madol">取消</button>
+          <button id="photoSketchExportBtn" type="button" class="ghost-button madol">导出像素图</button>
+          <button id="photoSketchCreateBtn" type="button" class="primary-button madol">生成草图</button>
+        </div>
+      </footer>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script type="module" src="./js/app.js"></script>
+</body>
+
+</html>
